@@ -57,29 +57,22 @@ if($called_position == 'before_display_content' && Context::getResponseMethod() 
 
         text_line.text('검사중..');
         $.ajax({
-            url: 'https://passwordcheck.hotoproject.com/check.php?q='+password_enc,
+            url: 'https://api.pwnedpasswords.com/range/'+password_enc.substring(0, 5),
             method: 'GET',
             timeout: 10000,
-            dataType: 'json',
+            dataType: 'text',
             error: function(xmlhttprequest, textstatus, message) {
                 if(textstatus===\"timeout\") {
                     alert('비밀번호 체크에 실패하였습니다. 잠시 후 다시시도 해주세요.');
                 }
             }
         })
-        .done(function(json) {
-            if(json.status != 200)
-            {
-                text_line.text('['+json.status+'] '+json.message);
-            }
-            else
-            {
-                if(json.is_exist == 0)
-                {
-                    text_line.html('&nbsp;<span style=\"color:green;\">이 비밀번호는 안전합니다. ('+e.target.value.length+'자)</span>');
-                }else{
-                    text_line.html('&nbsp;<span style=\"color:red;\">이 비밀번호는 위험합니다! 유출 횟수: '+json.leak_cnt.toLocaleString('ko-KR')+'회</span>');
-                }
+        .done(function(text) {
+            var result = text.match(new RegExp(password_enc.substring(5, password_enc.length) + ':([0-9])','i'));
+            if(result == null) {
+                text_line.html('&nbsp;<span style=\"color:green;\">이 비밀번호는 안전합니다. ('+e.target.value.length+'자)</span>');
+            } else {
+                text_line.html('&nbsp;<span style=\"color:red;\">이 비밀번호는 위험합니다! 유출 횟수: '+result[1]+'회</span>');
             }
         })
     });
